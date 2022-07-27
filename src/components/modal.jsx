@@ -1,10 +1,10 @@
-import React, { useState, useCallback,useEffect } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import Dropzone from "./Dropzone";
 import * as XLSX from "xlsx";
 import DataTable from "react-data-table-component";
 import moment from "moment";
 import Papa from "papaparse";
-import * as R from "rambda"
+import * as R from "rambda";
 //import ReactTable from "react-table";
 //import ReactDataSheet from "react-datasheet";
 // Be sure to include styles at some point, probably during your bootstrapping
@@ -29,35 +29,75 @@ function Modal() {
     );*/
 
   // process CSV data
-  const sumAllRows =  () =>{
-
-  }
-  useEffect (()=>{
+  const sumAllRows = () => {};
+  useEffect(() => {
     sumAllRows();
-  },[data2])
- 
+  }, [data2]);
 
-  const transformCSVtoArray = (data,{dateNameColumn="",depositNameColumn=""},dateToFilter=null) =>{
+  const transformCSVtoArray = (
+    data,
+    { dateNameColumn = "", depositNameColumn = "" },
+    dateToFilter = null
+  ) => {
     let sum_deposit = 0;
-    let cleanedData =  data.map(row => {
-      if(row[`${depositNameColumn}`] > 0)     
-      { 
-        if(dateToFilter === null)
-        {
-          sum_deposit += parseFloat( row[`${depositNameColumn}`]);
-          return [{value:row[`${dateNameColumn}`],readOnly:true},{value:row[`${depositNameColumn}`],readOnly:true}]
-        }
-        else
-        if(dateToFilter === row[`${dateNameColumn}`]){
-
+    let counter = 0;
+    let cleanedData = data.map((row) => {
+      if (row[`${depositNameColumn}`] > 0) {
+        if (dateToFilter === null) {
           sum_deposit += parseFloat(row[`${depositNameColumn}`]);
-          return [{value:row[`${dateNameColumn}`],readOnly:true},{value:row[`${depositNameColumn}`],readOnly:true}]
+          counter++;
+          console.log(`=(B${counter}-C${counter}-D${counter}-E${counter})`);
+          return [
+            { value: row[`${dateNameColumn}`], readOnly: true },
+            { value: row[`${depositNameColumn}`], readOnly: true },
+            { value: "" },
+            { value: "" },
+            { value: "" },
+            {
+              value: `=(B${counter}-C${counter}-D${counter}-E${counter})`,
+              readOnly: true,
+            },
+          ];
+        } else if (dateToFilter === row[`${dateNameColumn}`]) {
+          sum_deposit += parseFloat(row[`${depositNameColumn}`]);
+          counter++;
+          return [
+            { value: row[`${dateNameColumn}`], readOnly: true },
+            { value: row[`${depositNameColumn}`], readOnly: true },
+            { value: "" },
+            { value: "" },
+            { value: "" },
+            {
+              value: `=(B${counter}-C${counter}-D${counter}-E${counter})`,
+              readOnly: true,
+            },
+          ];
         }
-      } 
-    })
-    cleanedData.push([{value:"",readOnly:true},{value:sum_deposit,readOnly:true}])
+      }
+    });
+
+    cleanedData.push([
+      { value: "", readOnly: true },
+      { value: sum_deposit, readOnly: true },
+      { value: createStringFormula(counter, "C"), readOnly: true },
+      { value: createStringFormula(counter, "D"), readOnly: true },
+      { value: createStringFormula(counter, "E"), readOnly: true },
+      { value: createStringFormula(counter, "F"), readOnly: true },
+    ]);
     return cleanedData;
-  }
+  };
+
+  const createStringFormula = (counter, letter) => {
+    let string_formula = "=(";
+    for (let i = 0; i <= counter - 1; i++) {
+      string_formula += letter + (i + 1);
+      if (i < counter - 1) string_formula += "+";
+    }
+    string_formula += ")";
+
+    return string_formula;
+  };
+
   const onDrop = useCallback((acceptedFiles) => {
     acceptedFiles.map((file) => {
       // transorming data to adjust the spreadsheet specs
@@ -65,33 +105,34 @@ function Modal() {
         header: true,
         skipEmptyLines: true,
         complete: function (results) {
-        // setData(transformCSVtoArray(results.data,{dateNameColumn:'Posting Date',depositNameColumn:'Amount'}));
-       const dataSpreadSheet =  transformCSVtoArray(results.data,{dateNameColumn:'Posting Date',depositNameColumn:'Amount'},"02/28/2022").filter(row => row!== undefined)
-       setData(dataSpreadSheet);
+          // setData(transformCSVtoArray(results.data,{dateNameColumn:'Posting Date',depositNameColumn:'Amount'}));
+          const dataSpreadSheet = transformCSVtoArray(
+            results.data,
+            { dateNameColumn: "Posting Date", depositNameColumn: "Amount" },
+            "02/28/2022"
+          ).filter((row) => row !== undefined);
+          setData(dataSpreadSheet);
         },
       });
       return file;
     });
   }, []);
-  const changedbtn = () =>{
+  const changedbtn = () => {
     let copy = JSON.parse(JSON.stringify(data2));
-    copy[0][1] = {value:"algo mejor"};
+    copy[0][1] = { value: "algo mejor" };
 
     setData(copy);
-  }
-  const cellChanged = (obj) =>{
-    console.log(obj)
-  }
-  const onSelectData = (point) =>{
-    console.log("Se selecciono ",point);
-  }
-  const onChangeSpreadSheet = (matrix)=>{
-   // console.log(matrix);
+  };
+  const cellChanged = (obj) => {
+    console.log(obj);
+  };
+  const onSelectData = (point) => {};
+  const onChangeSpreadSheet = (matrix) => {
+    // console.log(matrix);
     setData(matrix);
-  }
+  };
 
   return (
-    
     <div className="" style={{ width: window.innerWidth * 0.5 }}>
       <div className="drawerHeaderSalesActivity">
         <div>
@@ -99,7 +140,18 @@ function Modal() {
         </div>
         <h3>New Bank Deposit</h3>
       </div>
-      <Spreadsheet columnLabels={["Date","Deposit","Equity","Bank Transfer","Other","Adjusted Bank Deposit"]}  onSelect={onSelectData} data={data2} onChange={onChangeSpreadSheet} />
+      <Spreadsheet
+        columnLabels={[
+          "Date",
+          "Deposit",
+          "Equity",
+          "Bank Transfer",
+          "Other",
+          "Adjusted Bank Deposit",
+        ]}
+        data={data2}
+        onChange={onChangeSpreadSheet}
+      />
       <button onClick={changedbtn}>change</button>
     </div>
   );
