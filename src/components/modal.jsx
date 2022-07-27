@@ -29,80 +29,14 @@ function Modal() {
     );*/
 
   // process CSV data
+  const sumAllRows =  () =>{
 
-  useEffect (()=>{
-  },[data2])
-  const processData = (dataString, date) => {
-    const dataStringLines = dataString?.split(/\r\n|\n/);
-    const headers = dataStringLines[0]?.split(
-      /,(?![^"]*"(?:(?:[^"]*"){2})*[^"]*$)/
-    );
-
-    const list = [];
-    for (let i = 1; i < dataStringLines.length; i++) {
-      const row = dataStringLines[i]?.split(
-        /,(?![^"]*"(?:(?:[^"]*"){2})*[^"]*$)/
-      );
-      if (headers && row.length == headers.length) {
-        const obj = {};
-        for (let j = 0; j < headers.length; j++) {
-          let d = row[j];
-          if (d.length > 0) {
-            if (d[0] == '"') d = d.substring(1, d.length - 1);
-            if (d[d.length - 1] == '"') d = d.substring(d.length - 2, 1);
-          }
-          if (headers[j]) {
-            obj[headers[j]] = d;
-          }
-        }
-
-        // remove the blank rows
-        if (Object.values(obj).filter((x) => x).length > 0) {
-          list.push(obj);
-        }
-      }
-    }
-
-    // prepare columns list from headers
-    const columns = headers.map((c) => ({
-      name: c,
-      selector: c,
-    }));
-
-    var dateFilter = moment(date).format("M/D/YY");
-
-    let result = list.filter(
-      (d) => d["Posting Date"] === dateFilter && d["Amount"] > 0
-    );
-    //console.log(columns);
-    setDataCsv(result);
-
-    removeColumns(columns);
-  };
-
-  function removeColumns(columns) {
-    let removeArray = [
-      { name: "Details", selector: "Details" },
-      { name: "Amount", selector: "Amount" },
-      { name: "Description", selector: "Description" },
-      { name: "Type", selector: "Type" },
-      { name: "Check or Slip #", selector: "Check or Slip #" },
-      { name: "", selector: "" },
-    ];
-
-    columns = columns.filter(
-      (c) => !removeArray.some((o) => o.name === c.name)
-    );
-
-    let addArray = [
-      { name: "Equity", selector: "Equity" },
-      { name: "Bank Transfer", selector: "Bank Transfer" },
-      { name: "Other", selector: "Other" },
-      { name: "Adjusted Bank Deposit", selector: "Adjusted Bank Deposit" },
-    ];
-
-    setColumns(columns.concat(addArray));
   }
+  useEffect (()=>{
+    sumAllRows();
+  },[data2])
+ 
+
   const transformCSVtoArray = (data,{dateNameColumn="",depositNameColumn=""},dateToFilter=null) =>{
     let sum_deposit = 0;
     let cleanedData =  data.map(row => {
@@ -126,22 +60,6 @@ function Modal() {
   }
   const onDrop = useCallback((acceptedFiles) => {
     acceptedFiles.map((file) => {
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        /* Parse data */
-        const bstr = e.target.result;
-        const wb = XLSX.read(bstr, { type: "binary" });
-        /* Get first worksheet */
-        const wsname = wb.SheetNames[0];
-        const ws = wb.Sheets[wsname];
-        /* Convert array of arrays */
-        const data = XLSX.utils.sheet_to_csv(ws, { header: 1 });
-       // processData(data, "2022-02-27");
-      //  setAux(data);
-      };
-      reader.readAsBinaryString(file);
-      //reader.readAsDataURL(file);
-     
       // transorming data to adjust the spreadsheet specs
       Papa.parse(file, {
         header: true,
@@ -155,10 +73,6 @@ function Modal() {
       return file;
     });
   }, []);
-
-  /* function show() {
-    processData(aux, "2022-02-27");
-  }*/
   const changedbtn = () =>{
     let copy = JSON.parse(JSON.stringify(data2));
     copy[0][1] = {value:"algo mejor"};
@@ -169,10 +83,10 @@ function Modal() {
     console.log(obj)
   }
   const onSelectData = (point) =>{
-    console.log(point);
+    console.log("Se selecciono ",point);
   }
   const onChangeSpreadSheet = (matrix)=>{
-    console.log(matrix);
+   // console.log(matrix);
     setData(matrix);
   }
 
